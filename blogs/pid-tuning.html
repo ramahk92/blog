@@ -1,1 +1,455 @@
 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Practical PID Controller Tuning | EE Learning Blog</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#f4f7fb;
+color:#333;
+line-height:1.8;
+}
+
+header{
+background:#003366;
+color:white;
+padding:20px 8%;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h2{
+font-size:30px;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+margin-left:25px;
+}
+
+.hero{
+
+height:350px;
+
+background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
+url("https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1500&q=80");
+
+background-size:cover;
+background-position:center;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+color:white;
+text-align:center;
+
+}
+
+.hero h1{
+font-size:48px;
+}
+
+.container{
+
+width:85%;
+max-width:1000px;
+margin:40px auto;
+
+}
+
+.article{
+
+background:white;
+padding:40px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,.1);
+
+}
+
+h2{
+
+color:#003366;
+margin-top:30px;
+
+}
+
+img{
+
+width:100%;
+margin:25px 0;
+border-radius:10px;
+
+}
+
+pre{
+
+background:#222;
+
+color:#00ff7f;
+
+padding:20px;
+
+overflow:auto;
+
+border-radius:5px;
+
+}
+
+.note{
+
+background:#fff3cd;
+
+padding:15px;
+
+border-left:5px solid orange;
+
+margin:20px 0;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-top:20px;
+
+}
+
+table,th,td{
+
+border:1px solid #ddd;
+
+}
+
+th{
+
+background:#003366;
+
+color:white;
+
+padding:12px;
+
+}
+
+td{
+
+padding:12px;
+
+}
+
+.button{
+
+display:inline-block;
+
+margin-top:30px;
+
+padding:12px 25px;
+
+background:#003366;
+
+color:white;
+
+text-decoration:none;
+
+border-radius:5px;
+
+}
+
+footer{
+
+margin-top:40px;
+
+background:#003366;
+
+color:white;
+
+padding:20px;
+
+text-align:center;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h2>EE Learning Blog</h2>
+
+<nav>
+
+<a href="../index.html">Home</a>
+
+<a href="../index.html#blogs">Blogs</a>
+
+</nav>
+
+</header>
+
+<section class="hero">
+
+<div>
+
+<h1>Practical PID Controller Tuning</h1>
+
+<p>Control Systems | Industrial Automation | MATLAB</p>
+
+</div>
+
+</section>
+
+<div class="container">
+
+<div class="article">
+
+<p>
+
+<strong>Author:</strong> Ram Kumar <br>
+
+Assistant Professor, Department of Electrical Engineering
+
+</p>
+
+<hr>
+
+<h2>Introduction</h2>
+
+<p>
+
+A Proportional–Integral–Derivative (PID) controller is the most widely used controller in industrial automation. It continuously calculates the error between the desired output (setpoint) and the measured output, then generates an appropriate control signal to minimize that error.
+
+</p>
+
+<div class="note">
+
+<b>Key Idea:</b>
+
+Nearly 90% of industrial control loops still use PID controllers because of their simplicity and excellent performance.
+
+</div>
+
+<h2>PID Controller Equation</h2>
+
+<p style="text-align:center;font-size:22px;">
+
+<b>
+
+u(t)=K<sub>p</sub>e(t)+K<sub>i</sub>∫e(t)dt+K<sub>d</sub>de(t)/dt
+
+</b>
+
+</p>
+
+<p>
+
+Where,
+
+</p>
+
+<ul>
+
+<li><b>Kp</b> → Proportional Gain</li>
+
+<li><b>Ki</b> → Integral Gain</li>
+
+<li><b>Kd</b> → Derivative Gain</li>
+
+</ul>
+
+<h2>Effect of PID Parameters</h2>
+
+<table>
+
+<tr>
+
+<th>Parameter</th>
+
+<th>Effect</th>
+
+</tr>
+
+<tr>
+
+<td>Kp ↑</td>
+
+<td>Reduces rise time but increases overshoot.</td>
+
+</tr>
+
+<tr>
+
+<td>Ki ↑</td>
+
+<td>Removes steady-state error but may increase oscillation.</td>
+
+</tr>
+
+<tr>
+
+<td>Kd ↑</td>
+
+<td>Improves stability and reduces overshoot.</td>
+
+</tr>
+
+</table>
+
+<h2>Manual PID Tuning Procedure</h2>
+
+<ol>
+
+<li>Set Ki = 0 and Kd = 0.</li>
+
+<li>Increase Kp until sustained oscillations occur.</li>
+
+<li>Reduce Kp slightly.</li>
+
+<li>Increase Ki until steady-state error disappears.</li>
+
+<li>Add Kd to reduce overshoot.</li>
+
+<li>Repeat until satisfactory performance is achieved.</li>
+
+</ol>
+
+<h2>Industrial Example</h2>
+
+<p>
+
+Suppose a DC motor must maintain 1500 RPM.
+
+Whenever the load changes, the speed decreases.
+
+The PID controller automatically increases the motor voltage to restore the desired speed.
+
+</p>
+
+<h2>MATLAB Example</h2>
+
+<pre>
+
+clc
+clear
+close all
+
+s=tf('s');
+
+G=1/(s*(s+2));
+
+Kp=5;
+Ki=2;
+Kd=1;
+
+C=pid(Kp,Ki,Kd);
+
+T=feedback(C*G,1);
+
+step(T)
+
+grid on
+
+title('PID Controlled System')
+
+</pre>
+
+<h2>Applications</h2>
+
+<ul>
+
+<li>DC Motor Speed Control</li>
+
+<li>Temperature Control</li>
+
+<li>Boiler Control</li>
+
+<li>Chemical Process Control</li>
+
+<li>Pressure Control</li>
+
+<li>Robotics</li>
+
+<li>Servo Position Control</li>
+
+<li>Automatic Voltage Regulator</li>
+
+</ul>
+
+<h2>Advantages</h2>
+
+<ul>
+
+<li>Easy implementation</li>
+
+<li>Excellent disturbance rejection</li>
+
+<li>Low computational cost</li>
+
+<li>Suitable for most industrial processes</li>
+
+<li>Available in PLCs and DCS systems</li>
+
+</ul>
+
+<h2>Disadvantages</h2>
+
+<ul>
+
+<li>Requires tuning</li>
+
+<li>Not suitable for highly nonlinear systems</li>
+
+<li>Derivative term amplifies measurement noise</li>
+
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>
+
+PID controllers remain the backbone of industrial automation because they are simple, robust, and effective. Understanding how each gain affects the system response is essential for designing high-performance control systems.
+
+</p>
+
+<a href="../index.html" class="button">
+
+⬅ Back to Home
+
+</a>
+
+</div>
+
+</div>
+
+<footer>
+
+© 2026 EE Learning Blog | Ram Kumar
+
+</footer>
+
+</body>
+
+</html>
