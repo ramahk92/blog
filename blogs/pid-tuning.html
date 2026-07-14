@@ -1,455 +1,1012 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Practical PID Controller Tuning | EE Learning Blog</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
+:root {
+  --bg: #0d1117;
+  --bg-elevated: #161b22;
+  --bg-card: #1c2128;
+  --border: #30363d;
+  --border-light: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #58a6ff;
+  --accent-glow: rgba(88, 166, 255, 0.15);
+  --accent-secondary: #f0883e;
+  --accent-green: #3fb950;
+  --accent-red: #f85149;
+  --accent-yellow: #d29922;
+  --code-bg: #0d1117;
+  --note-bg: rgba(242, 179, 0, 0.08);
+  --note-border: #d29922;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body{
-background:#f4f7fb;
-color:#333;
-line-height:1.8;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-header{
-background:#003366;
-color:white;
-padding:20px 8%;
-display:flex;
-justify-content:space-between;
-align-items:center;
+html {
+  scroll-behavior: smooth;
 }
 
-header h2{
-font-size:30px;
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-nav a{
-color:white;
-text-decoration:none;
-margin-left:25px;
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
 }
 
-.hero{
-
-height:350px;
-
-background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
-url("https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1500&q=80");
-
-background-size:cover;
-background-position:center;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-color:white;
-text-align:center;
-
+/* Header */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0 8%;
+  height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
 }
 
-.hero h1{
-font-size:48px;
+header.scrolled {
+  background: rgba(13, 17, 23, 0.95);
+  box-shadow: var(--shadow-md);
 }
 
-.container{
-
-width:85%;
-max-width:1000px;
-margin:40px auto;
-
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.5px;
 }
 
-.article{
-
-background:white;
-padding:40px;
-border-radius:10px;
-box-shadow:0 10px 25px rgba(0,0,0,.1);
-
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--accent), #79c0ff);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--bg);
+  font-weight: 800;
 }
 
-h2{
-
-color:#003366;
-margin-top:30px;
-
+nav {
+  display: flex;
+  gap: 8px;
 }
 
-img{
-
-width:100%;
-margin:25px 0;
-border-radius:10px;
-
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  position: relative;
 }
 
-pre{
-
-background:#222;
-
-color:#00ff7f;
-
-padding:20px;
-
-overflow:auto;
-
-border-radius:5px;
-
+nav a:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
-.note{
-
-background:#fff3cd;
-
-padding:15px;
-
-border-left:5px solid orange;
-
-margin:20px 0;
-
+nav a.active {
+  color: var(--accent);
+  background: var(--accent-glow);
 }
 
-table{
-
-width:100%;
-
-border-collapse:collapse;
-
-margin-top:20px;
-
+/* Hero */
+.hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 120px 20px 80px;
+  overflow: hidden;
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(240, 136, 62, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(63, 185, 80, 0.05) 0%, transparent 50%),
+    var(--bg);
 }
 
-table,th,td{
-
-border:1px solid #ddd;
-
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: 
+    linear-gradient(90deg, var(--border-light) 1px, transparent 1px),
+    linear-gradient(var(--border-light) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.3;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
 }
 
-th{
-
-background:#003366;
-
-color:white;
-
-padding:12px;
-
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
 }
 
-td{
-
-padding:12px;
-
+.hero-badge .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.button{
-
-display:inline-block;
-
-margin-top:30px;
-
-padding:12px 25px;
-
-background:#003366;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:5px;
-
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
 }
 
-footer{
-
-margin-top:40px;
-
-background:#003366;
-
-color:white;
-
-padding:20px;
-
-text-align:center;
-
+.hero h1 {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+.hero p {
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+}
+
+.hero-tags {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hero-tag {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.hero-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Main Container */
+.container {
+  width: 90%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 60px 0 80px;
+}
+
+/* Article Card */
+.article {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.article::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+}
+
+/* Author Block */
+.author-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.author-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #79c0ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.author-title {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.author-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Typography */
+h2 {
+  color: var(--text-primary);
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 40px;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-left: 16px;
+}
+
+h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent-secondary));
+  border-radius: 2px;
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+ul, ol {
+  margin: 16px 0 16px 24px;
+  color: var(--text-secondary);
+}
+
+li {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+li b {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Equation Block */
+.equation-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  margin: 24px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.equation-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary), var(--accent-green));
+}
+
+.equation-block p {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.equation-block sub {
+  font-size: 14px;
+}
+
+/* Note / Callout */
+.note {
+  background: var(--note-bg);
+  border: 1px solid rgba(210, 153, 34, 0.2);
+  border-left: 4px solid var(--note-border);
+  padding: 20px 24px;
+  border-radius: var(--radius-sm);
+  margin: 24px 0;
+  position: relative;
+}
+
+.note::before {
+  content: '⚡';
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background: var(--bg-elevated);
+  padding: 0 8px;
+  font-size: 16px;
+}
+
+.note b {
+  color: var(--accent-yellow);
+  font-weight: 600;
+}
+
+.note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+/* Table */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 24px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 14px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+tr:hover td {
+  background: rgba(88, 166, 255, 0.03);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td:first-child {
+  font-weight: 600;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+/* Code Block */
+pre {
+  background: var(--code-bg);
+  color: var(--text-primary);
+  padding: 24px;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  margin: 24px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.8;
+  position: relative;
+}
+
+pre::before {
+  content: 'MATLAB';
+  position: absolute;
+  top: 0; right: 0;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  border-bottom-left-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+
+pre .comment { color: #8b949e; }
+pre .keyword { color: #ff7b72; }
+pre .string { color: #a5d6ff; }
+pre .number { color: #79c0ff; }
+pre .function { color: #d2a8ff; }
+
+/* Step List */
+.step-list {
+  list-style: none;
+  margin: 24px 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.step-list li {
+  position: relative;
+  padding-left: 56px;
+  margin-bottom: 20px;
+  counter-increment: step;
+}
+
+.step-list li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  transition: var(--transition);
+}
+
+.step-list li:hover::before {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+}
+
+/* Feature Grid (Bento Style) */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: var(--transition);
+  cursor: default;
+}
+
+.feature-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.feature-card .icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Pros & Cons */
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (max-width: 640px) {
+  .pros-cons { grid-template-columns: 1fr; }
+  .article { padding: 28px; }
+  .container { width: 95%; }
+}
+
+.pros, .cons {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.pros { border-top: 3px solid var(--accent-green); }
+.cons { border-top: 3px solid var(--accent-red); }
+
+.pros h3, .cons h3 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.pros h3 { color: var(--accent-green); }
+.cons h3 { color: var(--accent-red); }
+
+.pros ul, .cons ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.pros li::marker { color: var(--accent-green); }
+.cons li::marker { color: var(--accent-red); }
+
+/* Button */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--accent), #0969da);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s;
+}
+
+.button:hover::after {
+  left: 100%;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+}
+
+/* Footer */
+footer {
+  margin-top: 0;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+footer a:hover {
+  color: var(--accent);
+}
+
+/* Scroll Reveal Animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reading Progress Bar */
+.reading-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+  z-index: 1001;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Back to Top */
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: var(--transition);
+  z-index: 999;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Section Divider */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 40px 0;
+  border: none;
+}
 </style>
-
+<base target="_blank">
 </head>
 
 <body>
 
-<header>
+<div class="reading-progress" id="progressBar"></div>
 
-<h2>EE Learning Blog</h2>
-
-<nav>
-
-<a href="../index.html">Home</a>
-
-<a href="../index.html#blogs">Blogs</a>
-
-</nav>
-
+<header id="mainHeader">
+  <a href="#" class="logo">
+    <div class="logo-icon">E</div>
+    EE Learning Blog
+  </a>
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Blogs</a>
+    <a href="#">About</a>
+  </nav>
 </header>
 
 <section class="hero">
-
-<div>
-
-<h1>Practical PID Controller Tuning</h1>
-
-<p>Control Systems | Industrial Automation | MATLAB</p>
-
-</div>
-
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Control Systems Engineering
+  </div>
+  <h1>Practical PID Controller Tuning</h1>
+  <p>Master the art of proportional-integral-derivative control for industrial automation and beyond.</p>
+  <div class="hero-tags">
+    <span class="hero-tag">Control Systems</span>
+    <span class="hero-tag">Industrial Automation</span>
+    <span class="hero-tag">MATLAB</span>
+  </div>
 </section>
 
 <div class="container">
-
-<div class="article">
-
-<p>
-
-<strong>Author:</strong> Ram Kumar <br>
-
-Assistant Professor, Department of Electrical Engineering
-
-</p>
-
-<hr>
-
-<h2>Introduction</h2>
-
-<p>
-
-A Proportional–Integral–Derivative (PID) controller is the most widely used controller in industrial automation. It continuously calculates the error between the desired output (setpoint) and the measured output, then generates an appropriate control signal to minimize that error.
-
-</p>
-
-<div class="note">
-
-<b>Key Idea:</b>
-
-Nearly 90% of industrial control loops still use PID controllers because of their simplicity and excellent performance.
-
-</div>
-
-<h2>PID Controller Equation</h2>
-
-<p style="text-align:center;font-size:22px;">
-
-<b>
-
-u(t)=K<sub>p</sub>e(t)+K<sub>i</sub>∫e(t)dt+K<sub>d</sub>de(t)/dt
-
-</b>
-
-</p>
-
-<p>
-
-Where,
-
-</p>
-
-<ul>
-
-<li><b>Kp</b> → Proportional Gain</li>
-
-<li><b>Ki</b> → Integral Gain</li>
-
-<li><b>Kd</b> → Derivative Gain</li>
-
-</ul>
-
-<h2>Effect of PID Parameters</h2>
-
-<table>
-
-<tr>
-
-<th>Parameter</th>
-
-<th>Effect</th>
-
-</tr>
-
-<tr>
-
-<td>Kp ↑</td>
-
-<td>Reduces rise time but increases overshoot.</td>
-
-</tr>
-
-<tr>
-
-<td>Ki ↑</td>
-
-<td>Removes steady-state error but may increase oscillation.</td>
-
-</tr>
-
-<tr>
-
-<td>Kd ↑</td>
-
-<td>Improves stability and reduces overshoot.</td>
-
-</tr>
-
-</table>
-
-<h2>Manual PID Tuning Procedure</h2>
-
-<ol>
-
-<li>Set Ki = 0 and Kd = 0.</li>
-
-<li>Increase Kp until sustained oscillations occur.</li>
-
-<li>Reduce Kp slightly.</li>
-
-<li>Increase Ki until steady-state error disappears.</li>
-
-<li>Add Kd to reduce overshoot.</li>
-
-<li>Repeat until satisfactory performance is achieved.</li>
-
-</ol>
-
-<h2>Industrial Example</h2>
-
-<p>
-
-Suppose a DC motor must maintain 1500 RPM.
-
-Whenever the load changes, the speed decreases.
-
-The PID controller automatically increases the motor voltage to restore the desired speed.
-
-</p>
-
-<h2>MATLAB Example</h2>
-
-<pre>
-
-clc
-clear
-close all
-
-s=tf('s');
-
-G=1/(s*(s+2));
-
-Kp=5;
-Ki=2;
-Kd=1;
-
-C=pid(Kp,Ki,Kd);
-
-T=feedback(C*G,1);
-
-step(T)
-
-grid on
-
-title('PID Controlled System')
-
-</pre>
-
-<h2>Applications</h2>
-
-<ul>
-
-<li>DC Motor Speed Control</li>
-
-<li>Temperature Control</li>
-
-<li>Boiler Control</li>
-
-<li>Chemical Process Control</li>
-
-<li>Pressure Control</li>
-
-<li>Robotics</li>
-
-<li>Servo Position Control</li>
-
-<li>Automatic Voltage Regulator</li>
-
-</ul>
-
-<h2>Advantages</h2>
-
-<ul>
-
-<li>Easy implementation</li>
-
-<li>Excellent disturbance rejection</li>
-
-<li>Low computational cost</li>
-
-<li>Suitable for most industrial processes</li>
-
-<li>Available in PLCs and DCS systems</li>
-
-</ul>
-
-<h2>Disadvantages</h2>
-
-<ul>
-
-<li>Requires tuning</li>
-
-<li>Not suitable for highly nonlinear systems</li>
-
-<li>Derivative term amplifies measurement noise</li>
-
-</ul>
-
-<h2>Conclusion</h2>
-
-<p>
-
-PID controllers remain the backbone of industrial automation because they are simple, robust, and effective. Understanding how each gain affects the system response is essential for designing high-performance control systems.
-
-</p>
-
-<a href="../index.html" class="button">
-
-⬅ Back to Home
-
-</a>
-
-</div>
-
+  <div class="article">
+
+    <div class="author-block reveal">
+      <div class="author-avatar">RK</div>
+      <div class="author-info">
+        <span class="author-name">Ram Kumar</span>
+        <span class="author-title">Assistant Professor, Department of Electrical Engineering</span>
+        <span class="author-date">Published July 2026 &bull; 8 min read</span>
+      </div>
+    </div>
+
+    <h2 class="reveal">Introduction</h2>
+    <p class="reveal">
+      A Proportional–Integral–Derivative (PID) controller is the most widely used controller in industrial automation. It continuously calculates the error between the desired output (setpoint) and the measured output, then generates an appropriate control signal to minimize that error.
+    </p>
+
+    <div class="note reveal">
+      <p><b>Key Insight:</b> Nearly 90% of industrial control loops still use PID controllers because of their simplicity and excellent performance across diverse applications.</p>
+    </div>
+
+    <h2 class="reveal">PID Controller Equation</h2>
+    <div class="equation-block reveal">
+      <p>u(t) = K<sub>p</sub> e(t) + K<sub>i</sub> &int;e(t)dt + K<sub>d</sub> de(t)/dt</p>
+    </div>
+    <p class="reveal">Where,</p>
+    <ul class="reveal">
+      <li><b>K<sub>p</sub></b> &rarr; Proportional Gain</li>
+      <li><b>K<sub>i</sub></b> &rarr; Integral Gain</li>
+      <li><b>K<sub>d</sub></b> &rarr; Derivative Gain</li>
+    </ul>
+
+    <h2 class="reveal">Effect of PID Parameters</h2>
+    <div class="table-wrapper reveal">
+      <table>
+        <tr>
+          <th>Parameter</th>
+          <th>Effect on System Response</th>
+        </tr>
+        <tr>
+          <td>K<sub>p</sub> &uarr;</td>
+          <td>Reduces rise time but increases overshoot.</td>
+        </tr>
+        <tr>
+          <td>K<sub>i</sub> &uarr;</td>
+          <td>Removes steady-state error but may increase oscillation.</td>
+        </tr>
+        <tr>
+          <td>K<sub>d</sub> &uarr;</td>
+          <td>Improves stability and reduces overshoot.</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2 class="reveal">Manual PID Tuning Procedure</h2>
+    <ol class="step-list reveal">
+      <li>Set K<sub>i</sub> = 0 and K<sub>d</sub> = 0.</li>
+      <li>Increase K<sub>p</sub> until sustained oscillations occur.</li>
+      <li>Reduce K<sub>p</sub> slightly.</li>
+      <li>Increase K<sub>i</sub> until steady-state error disappears.</li>
+      <li>Add K<sub>d</sub> to reduce overshoot.</li>
+      <li>Repeat until satisfactory performance is achieved.</li>
+    </ol>
+
+    <h2 class="reveal">Industrial Example</h2>
+    <p class="reveal">
+      Suppose a DC motor must maintain 1500 RPM. Whenever the load changes, the speed decreases. The PID controller automatically increases the motor voltage to restore the desired speed.
+    </p>
+
+    <h2 class="reveal">MATLAB Implementation</h2>
+    <pre class="reveal"><code><span class="comment">% Clear workspace and create transfer function</span>
+clc; clear; close all;
+
+s = tf(<span class="string">'s'</span>);
+G = <span class="number">1</span> / (s * (s + <span class="number">2</span>));
+
+<span class="comment">% Define PID controller gains</span>
+Kp = <span class="number">5</span>;
+Ki = <span class="number">2</span>;
+Kd = <span class="number">1</span>;
+
+C = pid(Kp, Ki, Kd);
+T = feedback(C * G, <span class="number">1</span>);
+
+<span class="comment">% Plot step response</span>
+step(T);
+grid on;
+title(<span class="string">'PID Controlled System Step Response'</span>);</code></pre>
+
+    <h2 class="reveal">Applications</h2>
+    <div class="feature-grid reveal">
+      <div class="feature-card">
+        <div class="icon">&#9881;&#65039;</div>
+        <p>DC Motor Speed Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#127777;&#65039;</div>
+        <p>Temperature Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#128293;</div>
+        <p>Boiler Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#9879;&#65039;</div>
+        <p>Chemical Process Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#128202;</div>
+        <p>Pressure Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#129302;</div>
+        <p>Robotics</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#127919;</div>
+        <p>Servo Position Control</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">&#9889;</div>
+        <p>Automatic Voltage Regulator</p>
+      </div>
+    </div>
+
+    <h2 class="reveal">Advantages & Disadvantages</h2>
+    <div class="pros-cons reveal">
+      <div class="pros">
+        <h3>&#10003; Advantages</h3>
+        <ul>
+          <li>Easy implementation</li>
+          <li>Excellent disturbance rejection</li>
+          <li>Low computational cost</li>
+          <li>Suitable for most industrial processes</li>
+          <li>Available in PLCs and DCS systems</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>&#10007; Disadvantages</h3>
+        <ul>
+          <li>Requires manual tuning</li>
+          <li>Not suitable for highly nonlinear systems</li>
+          <li>Derivative term amplifies measurement noise</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="reveal">Conclusion</h2>
+    <p class="reveal">
+      PID controllers remain the backbone of industrial automation because they are simple, robust, and effective. Understanding how each gain affects the system response is essential for designing high-performance control systems.
+    </p>
+
+    <a href="#" class="button reveal">
+      &larr; Back to Home
+    </a>
+
+  </div>
 </div>
 
 <footer>
-
-© 2026 EE Learning Blog | Ram Kumar
-
+  <p>&copy; 2026 <a href="#">EE Learning Blog</a> | Designed by Ram Kumar</p>
 </footer>
 
-</body>
+<a href="#" class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">&uarr;</a>
 
+<script>
+// Header scroll effect
+const header = document.getElementById('mainHeader');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 50) {
+    header.classList.add('scrolled');
+  } else {
+    header.classList.remove('scrolled');
+  }
+});
+
+// Reading progress bar
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  progressBar.style.width = progress + '%';
+});
+
+// Back to top button
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 400) {
+    backToTop.classList.add('visible');
+  } else {
+    backToTop.classList.remove('visible');
+  }
+});
+
+// Scroll reveal animation
+const revealElements = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+revealElements.forEach(el => revealObserver.observe(el));
+
+// Smooth scroll for nav links
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+</script>
+
+</body>
 </html>
