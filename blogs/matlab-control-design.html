@@ -1,503 +1,810 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>MATLAB Control System Design | EE Learning Blog</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
+:root {
+  --bg: #0a0e17;
+  --bg-elevated: #111827;
+  --bg-card: #1a2233;
+  --border: #2a3447;
+  --border-light: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  --accent-secondary: #f59e0b;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-cyan: #06b6d4;
+  --accent-pink: #ec4899;
+  --code-bg: #0f172a;
+  --note-bg: rgba(245, 158, 11, 0.08);
+  --note-border: #f59e0b;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.6);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body{
-background:#f4f7fb;
-color:#333;
-line-height:1.8;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-header{
-background:#003366;
-padding:20px 8%;
-display:flex;
-justify-content:space-between;
-align-items:center;
-color:white;
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Noise texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999;
 }
 
-header h2{
-font-size:30px;
+/* Header */
+header {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: rgba(10, 14, 23, 0.88);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0 8%;
+  height: 68px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
 }
 
-nav a{
-color:white;
-text-decoration:none;
-margin-left:25px;
-font-weight:500;
+header.scrolled {
+  background: rgba(10, 14, 23, 0.96);
+  box-shadow: var(--shadow-md);
 }
 
-.hero{
-
-height:350px;
-
-background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
-url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80");
-
-background-size:cover;
-background-position:center;
-
-display:flex;
-justify-content:center;
-align-items:center;
-text-align:center;
-color:white;
-
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 21px; font-weight: 800;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.6px;
 }
 
-.hero h1{
-font-size:48px;
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), #818cf8);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: white; font-weight: 900;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.35);
 }
 
-.container{
-width:85%;
-max-width:1000px;
-margin:40px auto;
+nav { display: flex; gap: 10px; }
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
 }
 
-.article{
-
-background:white;
-padding:40px;
-border-radius:10px;
-box-shadow:0 10px 25px rgba(0,0,0,.12);
-
+nav a:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
-h2{
-color:#003366;
-margin-top:35px;
+nav a.active {
+  color: var(--accent);
+  background: var(--accent-glow);
 }
 
-.note{
-
-background:#fff3cd;
-padding:15px;
-border-left:5px solid orange;
-margin:20px 0;
-
+/* Hero */
+.hero {
+  position: relative;
+  min-height: 540px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 130px 20px 90px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(99, 102, 241, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 25%, rgba(245, 158, 11, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    var(--bg);
 }
 
-pre{
-
-background:#1e1e1e;
-color:#00ff99;
-padding:20px;
-border-radius:5px;
-overflow:auto;
-
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, var(--border-light) 1px, transparent 1px),
+    linear-gradient(var(--border-light) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.25;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
 }
 
-table{
-
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 7px 18px;
+  border-radius: 100px;
+  font-size: 13px; font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 26px;
+  position: relative; z-index: 1;
 }
 
-table,th,td{
-
-border:1px solid #ddd;
-
+.hero-badge .dot {
+  width: 7px; height: 7px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: pulse 2.2s ease-in-out infinite;
 }
 
-th{
-
-background:#003366;
-color:white;
-padding:12px;
-
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
 }
 
-td{
-
-padding:12px;
-
+.hero h1 {
+  font-size: clamp(38px, 6.5vw, 68px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 22px;
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, var(--text-primary) 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.button{
-
-display:inline-block;
-margin-top:30px;
-padding:12px 25px;
-background:#003366;
-color:white;
-text-decoration:none;
-border-radius:5px;
-
+.hero p {
+  font-size: 19px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  position: relative; z-index: 1;
+  max-width: 520px;
+  letter-spacing: 0.3px;
 }
 
-footer{
-
-margin-top:40px;
-background:#003366;
-color:white;
-text-align:center;
-padding:20px;
-
+.hero-tags {
+  display: flex; gap: 12px;
+  margin-top: 32px;
+  position: relative; z-index: 1;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
+.hero-tag {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.hero-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* Main Container */
+.container {
+  width: 90%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 70px 0 90px;
+}
+
+/* Article Card */
+.article {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 52px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.article::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-secondary), var(--accent-green), transparent);
+  opacity: 0.6;
+}
+
+/* Author Block */
+.author-block {
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 36px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.author-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #818cf8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.3);
+}
+
+.author-info { display: flex; flex-direction: column; gap: 3px; }
+
+.author-name { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.author-title { font-size: 13px; color: var(--text-muted); }
+.author-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Typography */
+h2 {
+  color: var(--text-primary);
+  font-size: 28px; font-weight: 800;
+  margin-top: 44px; margin-bottom: 18px;
+  letter-spacing: -0.6px;
+  position: relative;
+  padding-left: 18px;
+}
+
+h2::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 5px; bottom: 5px;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent-secondary));
+  border-radius: 3px;
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+
+ul, ol {
+  margin: 18px 0 18px 28px;
+  color: var(--text-secondary);
+}
+
+li {
+  margin-bottom: 10px;
+  font-size: 15.5px;
+}
+
+li b { color: var(--text-primary); font-weight: 600; }
+
+/* Note / Callout */
+.note {
+  background: var(--note-bg);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-left: 4px solid var(--note-border);
+  padding: 22px 26px;
+  border-radius: var(--radius-sm);
+  margin: 26px 0;
+  position: relative;
+}
+
+.note::before {
+  content: '&#9889;';
+  position: absolute;
+  top: -13px; left: 22px;
+  background: var(--bg-elevated);
+  padding: 0 10px;
+  font-size: 18px;
+}
+
+.note b { color: var(--accent-secondary); font-weight: 700; }
+.note p { margin: 0; color: var(--text-secondary); font-size: 15.5px; }
+
+/* Code Block */
+pre {
+  background: var(--code-bg);
+  color: var(--text-primary);
+  padding: 26px;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  margin: 26px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.85;
+  position: relative;
+}
+
+pre::before {
+  content: 'MATLAB';
+  position: absolute;
+  top: 0; right: 0;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 5px 14px;
+  font-size: 11px; font-weight: 700;
+  color: var(--accent);
+  border-bottom-left-radius: var(--radius-sm);
+  letter-spacing: 0.6px;
+}
+
+pre .comment { color: #6b7280; }
+pre .keyword { color: #f472b6; }
+pre .string { color: #7dd3fc; }
+pre .number { color: #a5b4fc; }
+pre .function { color: #c4b5fd; }
+
+/* Table */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 26px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+
+th {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 15px 22px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+tr:hover td { background: rgba(99, 102, 241, 0.04); }
+tr:last-child td { border-bottom: none; }
+
+td:first-child {
+  font-weight: 700;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+}
+
+/* Feature Grid (Bento Style) */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin: 26px 0;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  transition: var(--transition);
+  cursor: default;
+}
+
+.feature-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.feature-card .icon {
+  font-size: 26px;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Pros & Cons */
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin: 26px 0;
+}
+
+.pros, .cons {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 26px;
+}
+
+.pros { border-top: 3px solid var(--accent-green); }
+.cons { border-top: 3px solid var(--accent-red); }
+
+.pros h3, .cons h3 {
+  font-size: 14px; font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 18px;
+}
+
+.pros h3 { color: var(--accent-green); }
+.cons h3 { color: var(--accent-red); }
+
+.pros ul, .cons ul { margin: 0; padding-left: 22px; }
+.pros li::marker { color: var(--accent-green); }
+.cons li::marker { color: var(--accent-red); }
+
+/* Button */
+.button {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: 44px;
+  padding: 15px 32px;
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.6s;
+}
+
+.button:hover::after { left: 100%; }
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+}
+
+/* Footer */
+footer {
+  margin-top: 0;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 44px 20px;
+  text-align: center;
+  font-size: 14.5px;
+}
+
+footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+footer a:hover { color: var(--accent); }
+
+/* Scroll Reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reading Progress Bar */
+.reading-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary), var(--accent-green));
+  z-index: 1001;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Back to Top */
+.back-to-top {
+  position: fixed;
+  bottom: 32px; right: 32px;
+  width: 48px; height: 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: var(--transition);
+  z-index: 999;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .article { padding: 30px; }
+  .container { width: 95%; }
+  header { padding: 0 5%; }
+  nav a { padding: 7px 12px; font-size: 13px; }
+}
 </style>
-
+<base target="_blank">
 </head>
 
 <body>
 
-<header>
+<div class="reading-progress" id="progressBar"></div>
 
-<h2>EE Learning Blog</h2>
-
-<nav>
-
-<a href="../index.html">Home</a>
-
-<a href="../index.html#blogs">Blogs</a>
-
-</nav>
-
+<header id="mainHeader">
+  <a href="#" class="logo">
+    <div class="logo-icon">E</div>
+    EE Learning Blog
+  </a>
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Blogs</a>
+    <a href="#">About</a>
+  </nav>
 </header>
 
 <section class="hero">
-
-<div>
-
-<h1>MATLAB Control System Design</h1>
-
-<p>Simulation • Analysis • Controller Design</p>
-
-</div>
-
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Control Systems Engineering
+  </div>
+  <h1>MATLAB Control System Design</h1>
+  <p>Simulation &bull; Analysis &bull; Controller Design</p>
+  <div class="hero-tags">
+    <span class="hero-tag">MATLAB</span>
+    <span class="hero-tag">Control Theory</span>
+    <span class="hero-tag">Simulink</span>
+  </div>
 </section>
 
 <div class="container">
-
-<div class="article">
-
-<p>
-
-<strong>Author:</strong> Ram Kumar<br>
-Assistant Professor, Department of Electrical Engineering
-
-</p>
-
-<hr>
-
-<h2>Introduction</h2>
-
-<p>
-
-MATLAB is one of the most widely used software packages for analyzing and designing control systems. Engineers use MATLAB to model dynamic systems, analyze system stability, tune controllers, and simulate system responses before implementing them in real hardware.
-
-</p>
-
-<div class="note">
-
-<b>Why MATLAB?</b>
-
-MATLAB provides powerful built-in functions for transfer functions, state-space models, PID tuning, root locus, Bode plots, Nyquist plots, and Simulink-based simulations.
-
-</div>
-
-<h2>Features of MATLAB for Control Systems</h2>
-
-<ul>
-
-<li>Transfer Function Modeling</li>
-
-<li>State Space Representation</li>
-
-<li>Step Response Analysis</li>
-
-<li>Impulse Response</li>
-
-<li>Root Locus Design</li>
-
-<li>Bode Plot</li>
-
-<li>Nyquist Plot</li>
-
-<li>Nichols Chart</li>
-
-<li>PID Controller Design</li>
-
-<li>Simulink Simulation</li>
-
-</ul>
-
-<h2>Example 1: Creating a Transfer Function</h2>
-
-<pre>
-
-clc
-clear
-close all
-
-num=[1];
-
-den=[1 3 2];
-
-G=tf(num,den)
-
-step(G)
-
-grid on
-
-</pre>
-
-<p>
-
-The <b>tf()</b> command creates the transfer function model, while <b>step()</b> displays the unit step response.
-
-</p>
-
-<h2>Example 2: Root Locus</h2>
-
-<pre>
-
-clc
-clear
-
-G=tf([1],[1 4 5 2]);
-
-rlocus(G)
-
-grid on
-
-title('Root Locus')
-
-</pre>
-
-<p>
-
-Root locus is used to determine how the closed-loop poles move as the proportional gain changes.
-
-</p>
-
-<h2>Example 3: Bode Plot</h2>
-
-<pre>
-
-clc
-clear
-
-G=tf([5],[1 6 11 6]);
-
-bode(G)
-
-grid on
-
-margin(G)
-
-</pre>
-
-<p>
-
-The Bode plot helps determine gain margin, phase margin, and system stability.
-
-</p>
-
-<h2>Example 4: PID Controller Design</h2>
-
-<pre>
-
-clc
-clear
-
-s=tf('s');
-
-G=1/(s*(s+2));
-
-C=pid(5,2,1);
-
-T=feedback(C*G,1);
-
-step(T)
-
-grid on
-
-</pre>
-
-<p>
-
-The <b>pid()</b> function creates a PID controller, while <b>feedback()</b> forms the closed-loop system.
-
-</p>
-
-<h2>MATLAB Functions Used in Control Engineering</h2>
-
-<table>
-
-<tr>
-
-<th>Function</th>
-
-<th>Purpose</th>
-
-</tr>
-
-<tr>
-
-<td>tf()</td>
-
-<td>Create Transfer Function</td>
-
-</tr>
-
-<tr>
-
-<td>ss()</td>
-
-<td>State Space Model</td>
-
-</tr>
-
-<tr>
-
-<td>step()</td>
-
-<td>Step Response</td>
-
-</tr>
-
-<tr>
-
-<td>impulse()</td>
-
-<td>Impulse Response</td>
-
-</tr>
-
-<tr>
-
-<td>rlocus()</td>
-
-<td>Root Locus</td>
-
-</tr>
-
-<tr>
-
-<td>bode()</td>
-
-<td>Bode Plot</td>
-
-</tr>
-
-<tr>
-
-<td>nyquist()</td>
-
-<td>Nyquist Plot</td>
-
-</tr>
-
-<tr>
-
-<td>nichols()</td>
-
-<td>Nichols Chart</td>
-
-</tr>
-
-<tr>
-
-<td>pid()</td>
-
-<td>PID Controller</td>
-
-</tr>
-
-<tr>
-
-<td>feedback()</td>
-
-<td>Closed Loop System</td>
-
-</tr>
-
-</table>
-
-<h2>Applications</h2>
-
-<ul>
-
-<li>Motor Speed Control</li>
-
-<li>Load Frequency Control</li>
-
-<li>Automatic Voltage Regulator</li>
-
-<li>Robotics</li>
-
-<li>Aircraft Control Systems</li>
-
-<li>Industrial Process Control</li>
-
-<li>Renewable Energy Systems</li>
-
-<li>Power Electronics</li>
-
-</ul>
-
-<h2>Advantages of MATLAB</h2>
-
-<ul>
-
-<li>User-friendly programming environment</li>
-
-<li>Large library of built-in control functions</li>
-
-<li>Excellent visualization tools</li>
-
-<li>Integration with Simulink</li>
-
-<li>Supports rapid controller prototyping</li>
-
-</ul>
-
-<h2>Conclusion</h2>
-
-<p>
-
-MATLAB has become the industry-standard software for control system analysis and design. Its powerful toolboxes and graphical capabilities allow engineers and students to model, analyze, simulate, and optimize dynamic systems efficiently before real-world implementation.
-
-</p>
-
-<a href="../index.html" class="button">
-
-⬅ Back to Home
-
-</a>
-
-</div>
-
+  <div class="article">
+
+    <div class="author-block reveal">
+      <div class="author-avatar">RK</div>
+      <div class="author-info">
+        <span class="author-name">Ram Kumar</span>
+        <span class="author-title">Assistant Professor, Department of Electrical Engineering</span>
+        <span class="author-date">Published July 2026 &bull; 10 min read</span>
+      </div>
+    </div>
+
+    <h2 class="reveal">Introduction</h2>
+    <p class="reveal">
+      MATLAB is one of the most widely used software packages for analyzing and designing control systems. Engineers use MATLAB to model dynamic systems, analyze system stability, tune controllers, and simulate system responses before implementing them in real hardware.
+    </p>
+
+    <div class="note reveal">
+      <p><b>Why MATLAB?</b> MATLAB provides powerful built-in functions for transfer functions, state-space models, PID tuning, root locus, Bode plots, Nyquist plots, and Simulink-based simulations.</p>
+    </div>
+
+    <h2 class="reveal">Features of MATLAB for Control Systems</h2>
+    <div class="feature-grid reveal">
+      <div class="feature-card"><div class="icon">&#128208;</div><p>Transfer Function Modeling</p></div>
+      <div class="feature-card"><div class="icon">&#128300;</div><p>State Space Representation</p></div>
+      <div class="feature-card"><div class="icon">&#128200;</div><p>Step Response Analysis</p></div>
+      <div class="feature-card"><div class="icon">&#9889;</div><p>Impulse Response</p></div>
+      <div class="feature-card"><div class="icon">&#127793;</div><p>Root Locus Design</p></div>
+      <div class="feature-card"><div class="icon">&#128202;</div><p>Bode Plot</p></div>
+      <div class="feature-card"><div class="icon">&#128256;</div><p>Nyquist Plot</p></div>
+      <div class="feature-card"><div class="icon">&#128207;</div><p>Nichols Chart</p></div>
+      <div class="feature-card"><div class="icon">&#9881;&#65039;</div><p>PID Controller Design</p></div>
+      <div class="feature-card"><div class="icon">&#128187;</div><p>Simulink Simulation</p></div>
+    </div>
+
+    <h2 class="reveal">Example 1: Creating a Transfer Function</h2>
+    <pre class="reveal"><code><span class="comment">% Clear workspace</span>
+clc; clear; close all;
+
+num = [<span class="number">1</span>];
+den = [<span class="number">1</span> <span class="number">3</span> <span class="number">2</span>];
+
+G = tf(num, den);
+step(G);
+grid on;</code></pre>
+    <p class="reveal">The <b>tf()</b> command creates the transfer function model, while <b>step()</b> displays the unit step response.</p>
+
+    <h2 class="reveal">Example 2: Root Locus</h2>
+    <pre class="reveal"><code><span class="comment">% Root locus analysis</span>
+clc; clear;
+
+G = tf([<span class="number">1</span>], [<span class="number">1</span> <span class="number">4</span> <span class="number">5</span> <span class="number">2</span>]);
+rlocus(G);
+grid on;
+title(<span class="string">'Root Locus'</span>);</code></pre>
+    <p class="reveal">Root locus is used to determine how the closed-loop poles move as the proportional gain changes.</p>
+
+    <h2 class="reveal">Example 3: Bode Plot</h2>
+    <pre class="reveal"><code><span class="comment">% Frequency response analysis</span>
+clc; clear;
+
+G = tf([<span class="number">5</span>], [<span class="number">1</span> <span class="number">6</span> <span class="number">11</span> <span class="number">6</span>]);
+bode(G);
+grid on;
+margin(G);</code></pre>
+    <p class="reveal">The Bode plot helps determine gain margin, phase margin, and system stability.</p>
+
+    <h2 class="reveal">Example 4: PID Controller Design</h2>
+    <pre class="reveal"><code><span class="comment">% PID controller design</span>
+clc; clear;
+
+s = tf(<span class="string">'s'</span>);
+G = <span class="number">1</span> / (s * (s + <span class="number">2</span>));
+
+C = pid(<span class="number">5</span>, <span class="number">2</span>, <span class="number">1</span>);
+T = feedback(C * G, <span class="number">1</span>);
+
+step(T);
+grid on;</code></pre>
+    <p class="reveal">The <b>pid()</b> function creates a PID controller, while <b>feedback()</b> forms the closed-loop system.</p>
+
+    <h2 class="reveal">MATLAB Functions Used in Control Engineering</h2>
+    <div class="table-wrapper reveal">
+      <table>
+        <tr><th>Function</th><th>Purpose</th></tr>
+        <tr><td>tf()</td><td>Create Transfer Function</td></tr>
+        <tr><td>ss()</td><td>State Space Model</td></tr>
+        <tr><td>step()</td><td>Step Response</td></tr>
+        <tr><td>impulse()</td><td>Impulse Response</td></tr>
+        <tr><td>rlocus()</td><td>Root Locus</td></tr>
+        <tr><td>bode()</td><td>Bode Plot</td></tr>
+        <tr><td>nyquist()</td><td>Nyquist Plot</td></tr>
+        <tr><td>nichols()</td><td>Nichols Chart</td></tr>
+        <tr><td>pid()</td><td>PID Controller</td></tr>
+        <tr><td>feedback()</td><td>Closed Loop System</td></tr>
+      </table>
+    </div>
+
+    <h2 class="reveal">Applications</h2>
+    <div class="feature-grid reveal">
+      <div class="feature-card"><div class="icon">&#9881;&#65039;</div><p>Motor Speed Control</p></div>
+      <div class="feature-card"><div class="icon">&#128267;</div><p>Load Frequency Control</p></div>
+      <div class="feature-card"><div class="icon">&#9889;</div><p>Automatic Voltage Regulator</p></div>
+      <div class="feature-card"><div class="icon">&#129302;</div><p>Robotics</p></div>
+      <div class="feature-card"><div class="icon">&#9992;&#65039;</div><p>Aircraft Control Systems</p></div>
+      <div class="feature-card"><div class="icon">&#127981;</div><p>Industrial Process Control</p></div>
+      <div class="feature-card"><div class="icon">&#127759;</div><p>Renewable Energy Systems</p></div>
+      <div class="feature-card"><div class="icon">&#128268;</div><p>Power Electronics</p></div>
+    </div>
+
+    <h2 class="reveal">Advantages of MATLAB</h2>
+    <div class="pros-cons reveal">
+      <div class="pros">
+        <h3>&#10003; Advantages</h3>
+        <ul>
+          <li>User-friendly programming environment</li>
+          <li>Large library of built-in control functions</li>
+          <li>Excellent visualization tools</li>
+          <li>Integration with Simulink</li>
+          <li>Supports rapid controller prototyping</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="reveal">Conclusion</h2>
+    <p class="reveal">
+      MATLAB has become the industry-standard software for control system analysis and design. Its powerful toolboxes and graphical capabilities allow engineers and students to model, analyze, simulate, and optimize dynamic systems efficiently before real-world implementation.
+    </p>
+
+    <a href="#" class="button reveal">
+      &larr; Back to Home
+    </a>
+
+  </div>
 </div>
 
 <footer>
-
-© 2026 EE Learning Blog | Developed by Ram Kumar
-
+  <p>&copy; 2026 <a href="#">EE Learning Blog</a> | Developed by Ram Kumar</p>
 </footer>
 
-</body>
+<a href="#" class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">&uarr;</a>
 
+<script>
+// Header scroll effect
+const header = document.getElementById('mainHeader');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Reading progress bar
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  progressBar.style.width = (scrollTop / docHeight * 100) + '%';
+});
+
+// Back to top button
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  backToTop.classList.toggle('visible', window.scrollY > 400);
+});
+
+// Scroll reveal animation
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// Nav active state
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+</script>
+
+</body>
 </html>
