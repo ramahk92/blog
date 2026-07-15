@@ -758,7 +758,6 @@ footer a:hover {
   border: none;
 }
 </style>
-<base target="_blank">
 </head>
 
 <body>
@@ -766,14 +765,14 @@ footer a:hover {
 <div class="reading-progress" id="progressBar"></div>
 
 <header id="mainHeader">
-  <a href="#" class="logo">
+  <a href="../index.html#home" class="logo">
     <div class="logo-icon">E</div>
     EE Learning Blog
   </a>
   <nav>
-    <a href="#" class="active">Home</a>
-    <a href="#">Blogs</a>
-    <a href="#">About</a>
+    <a href="../index.html#home" class="active">Home</a>
+    <a href="../index.html#blogs">Blogs</a>
+    <a href="../index.html#about">About</a>
   </nav>
 </header>
 
@@ -943,7 +942,7 @@ title(<span class="string">'PID Controlled System Step Response'</span>);</code>
       PID controllers remain the backbone of industrial automation because they are simple, robust, and effective. Understanding how each gain affects the system response is essential for designing high-performance control systems.
     </p>
 
-    <a href="#" class="button reveal">
+    <a href="../index.html#home" class="button reveal">
       &larr; Back to Home
     </a>
 
@@ -951,7 +950,7 @@ title(<span class="string">'PID Controlled System Step Response'</span>);</code>
 </div>
 
 <footer>
-  <p>&copy; 2026 <a href="#">EE Learning Blog</a> | Designed by Ram Kumar</p>
+  <p>&copy; 2026 <a href="../index.html#home">EE Learning Blog</a> | Designed by Ram Kumar</p>
 </footer>
 
 <a href="#" class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">&uarr;</a>
@@ -1000,8 +999,7 @@ revealElements.forEach(el => revealObserver.observe(el));
 
 // Smooth scroll for nav links
 document.querySelectorAll('nav a').forEach(link => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
+  link.addEventListener('click', () => {
     document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
     link.classList.add('active');
   });
