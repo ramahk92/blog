@@ -12,12 +12,14 @@
   const STATUSES = ['Submitted', 'In Review', 'In Progress', 'Resolved', 'Rejected'];
   const OPEN_STATUSES = new Set(['Submitted', 'In Review', 'In Progress']);
   const ALLOWED_FILE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'application/pdf']);
+  const PRIORITY_DUE_DAYS = { High: 2, Medium: 4, Low: 7 };
+  // Rate limit: max 3 complaints per 10-minute window per student.
   const MAX_FILE_SIZE = 2 * 1024 * 1024;
   const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
   const SUBMIT_LIMIT = 3;
 
   function nowISO() { return new Date().toISOString(); }
-  function id(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+  function generateId(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
 
   function sanitize(text) {
     return String(text || '')
@@ -126,7 +128,7 @@
     if (users.some(u => u.email === cleanEmail)) return { ok: false, error: 'Email already exists.' };
 
     const user = {
-      id: id('stu'),
+      id: generateId('stu'),
       name: cleanName,
       email: cleanEmail,
       department: cleanDepartment,
@@ -162,8 +164,7 @@
   }
 
   function dueDateForPriority(priority, expectedDaysInput) {
-    const map = { High: 2, Medium: 4, Low: 7 };
-    const fallback = map[priority] || 5;
+    const fallback = PRIORITY_DUE_DAYS[priority] || 5;
     const n = Number(expectedDaysInput);
     const days = Number.isFinite(n) && n > 0 && n <= 30 ? n : fallback;
     const due = new Date();
@@ -189,7 +190,7 @@
   function addUpdate({ complaintId, actorId, actorName, message, newStatus }) {
     const updates = read(KEY.updates, []);
     updates.push({
-      id: id('upd'),
+      id: generateId('upd'),
       complaint_id: complaintId,
       actor_id: actorId,
       actor_name: sanitize(actorName),
@@ -203,7 +204,7 @@
   function addNotification({ userId, complaintId, message }) {
     const notifications = read(KEY.notifications, []);
     notifications.push({
-      id: id('ntf'),
+      id: generateId('ntf'),
       user_id: userId,
       complaint_id: complaintId,
       message: sanitize(message),
@@ -236,7 +237,7 @@
 
     const complaints = read(KEY.complaints, []);
     const complaint = {
-      id: id('cmp'),
+      id: generateId('cmp'),
       title: cleanTitle,
       category: cleanCategory,
       priority: cleanPriority,

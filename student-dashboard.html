@@ -121,7 +121,7 @@
 <script src="/portal.js"></script>
 <script>
 const user = portal.requireRole('student');
-if (!user) throw new Error('Unauthorized');
+if (!user) throw new Error('User authentication failed - role check did not pass');
 document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 

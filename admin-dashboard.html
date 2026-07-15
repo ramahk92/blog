@@ -104,7 +104,7 @@
 <script src="/portal.js"></script>
 <script>
 const admin = portal.requireRole('admin');
-if (!admin) throw new Error('Unauthorized');
+if (!admin) throw new Error('Admin authentication failed - role check did not pass');
 
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 document.getElementById('backupBtn').addEventListener('click', portal.exportBackup);
