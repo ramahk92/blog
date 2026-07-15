@@ -125,10 +125,11 @@ if (!user) {
   window.location.href = '/login.html';
 }
 if (user) {
+const SYSTEM_ACTOR = 'System';
 document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 
-portal.escalateOverdueComplaints('System');
+portal.escalateOverdueComplaints(SYSTEM_ACTOR);
 
 const categoryEl = document.getElementById('category');
 const priorityEl = document.getElementById('priority');

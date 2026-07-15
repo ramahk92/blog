@@ -59,9 +59,9 @@
 <script>
 const form = document.getElementById('registerForm');
 const message = document.getElementById('message');
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const result = portal.registerStudent({
+  const result = await portal.registerStudent({
     name: document.getElementById('name').value,
     email: document.getElementById('email').value,
     department: document.getElementById('department').value,

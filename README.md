@@ -2,7 +2,7 @@
 
 This repository now hosts a front-end complaint portal for college facilities.
 
-> ⚠️ Demo-only warning: authentication data is stored in browser localStorage for demonstration purposes. Do not use this implementation as-is in production.
+> ⚠️ Demo-only warning: authentication data is stored in browser localStorage (with SHA-256 password hashing) for demonstration purposes. Do not use this implementation as-is in production.
 
 ## Scope and roles
 - **Student**: register/login, submit complaint, track status and updates.

@@ -17,9 +17,15 @@
   const MAX_FILE_SIZE = 2 * 1024 * 1024;
   const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
   const SUBMIT_LIMIT = 3;
+  const ADMIN_PASSWORD_HASH = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7';
 
   function nowISO() { return new Date().toISOString(); }
   function generateId(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+  async function hashPassword(password) {
+    const data = new TextEncoder().encode(String(password));
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
   function sanitize(text) {
     return String(text || '')
@@ -74,13 +80,20 @@
         id: 'admin-1',
         name: 'Portal Admin',
         email: 'admin@college.edu',
-        password: 'Admin@123',
+        password_hash: ADMIN_PASSWORD_HASH,
         role: 'admin',
         department: 'Administration',
         created_at: nowISO()
       });
-      write(KEY.users, users);
+    } else {
+      users.forEach(u => {
+        if (u.email === 'admin@college.edu' && u.password === 'Admin@123' && !u.password_hash) {
+          u.password_hash = ADMIN_PASSWORD_HASH;
+          delete u.password;
+        }
+      });
     }
+    write(KEY.users, users);
 
     if (!Array.isArray(read(KEY.complaints, null))) write(KEY.complaints, []);
     if (!Array.isArray(read(KEY.updates, null))) write(KEY.updates, []);
@@ -102,10 +115,7 @@
 
   function requireRole(role) {
     const user = currentUser();
-    if (!user || (role && user.role !== role)) {
-      window.location.href = '/login.html';
-      return null;
-    }
+    if (!user || (role && user.role !== role)) return null;
     return user;
   }
 
@@ -113,7 +123,7 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  function registerStudent({ name, email, department, password, confirmPassword }) {
+  async function registerStudent({ name, email, department, password, confirmPassword }) {
     const cleanName = sanitize(name);
     const cleanEmail = sanitize(email).toLowerCase();
     const cleanDepartment = sanitize(department);
@@ -133,7 +143,7 @@
       email: cleanEmail,
       department: cleanDepartment,
       role: 'student',
-      password,
+      password_hash: await hashPassword(password),
       created_at: nowISO()
     };
     users.push(user);
@@ -141,11 +151,19 @@
     return { ok: true };
   }
 
-  function login({ email, password }) {
+  async function login({ email, password }) {
     const cleanEmail = sanitize(email).toLowerCase();
     const users = read(KEY.users, []);
-    const found = users.find(u => u.email === cleanEmail && u.password === password);
+    const found = users.find(u => u.email === cleanEmail);
     if (!found) return { ok: false, error: 'Invalid credentials.' };
+    const hashed = await hashPassword(password);
+    const matched = found.password_hash ? found.password_hash === hashed : found.password === password;
+    if (!matched) return { ok: false, error: 'Invalid credentials.' };
+    if (!found.password_hash) {
+      found.password_hash = hashed;
+      delete found.password;
+      write(KEY.users, users);
+    }
     setCurrentUser({ id: found.id, name: found.name, email: found.email, role: found.role, department: found.department });
     return { ok: true, role: found.role };
   }
