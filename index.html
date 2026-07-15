@@ -562,7 +562,6 @@ footer a:hover { color: var(--accent); }
   nav a { padding: 7px 12px; font-size: 13px; }
 }
 </style>
-<base target="_blank">
 </head>
 
 <body>
@@ -575,13 +574,13 @@ footer a:hover { color: var(--accent); }
     Control Systems Blog
   </a>
   <nav>
-    <a href="#" class="active">Home</a>
+    <a href="#home" class="active">Home</a>
     <a href="#blogs">Blogs</a>
     <a href="#about">About</a>
   </nav>
 </header>
 
-<section class="hero">
+<section class="hero" id="home">
   <div class="hero-badge">
     <span class="dot"></span>
     Engineering Education
@@ -717,17 +716,59 @@ const revealObserver = new IntersectionObserver((entries) => {
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
 // Smooth scroll for nav links
-document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+const navLinks = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+
+navLinks.forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    const target = document.querySelector(link.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-      document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-    }
+    const targetSelector = link.getAttribute('href');
+
+    const target = document.querySelector(targetSelector);
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+
+    navLinks.forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
   });
 });
+
+// Active nav link while scrolling
+const sections = navLinks
+  .map(link => {
+    const selector = link.getAttribute('href');
+    return document.querySelector(selector);
+  })
+  .filter(Boolean);
+
+function updateActiveNavLink() {
+  const scrollPosition = window.scrollY + 120;
+  let currentSection = sections[0];
+
+  sections.forEach(section => {
+    if (section.offsetTop <= scrollPosition) {
+      currentSection = section;
+    }
+  });
+
+  if (!currentSection) return;
+
+  const activeSelector = `#${currentSection.id}`;
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === activeSelector);
+  });
+}
+
+let navUpdateScheduled = false;
+window.addEventListener('scroll', () => {
+  if (navUpdateScheduled) return;
+
+  navUpdateScheduled = true;
+  requestAnimationFrame(() => {
+    updateActiveNavLink();
+    navUpdateScheduled = false;
+  });
+});
+
+updateActiveNavLink();
 </script>
 
 </body>
