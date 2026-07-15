@@ -591,7 +591,6 @@ footer a:hover { color: var(--accent); }
   nav a { padding: 7px 12px; font-size: 13px; }
 }
 </style>
-<base target="_blank">
 </head>
 
 <body>
@@ -599,14 +598,14 @@ footer a:hover { color: var(--accent); }
 <div class="reading-progress" id="progressBar"></div>
 
 <header id="mainHeader">
-  <a href="#" class="logo">
+  <a href="../index.html#home" class="logo">
     <div class="logo-icon">E</div>
     EE Learning Blog
   </a>
   <nav>
-    <a href="#" class="active">Home</a>
-    <a href="#">Blogs</a>
-    <a href="#">About</a>
+    <a href="../index.html#home" class="active">Home</a>
+    <a href="../index.html#blogs">Blogs</a>
+    <a href="../index.html#about">About</a>
   </nav>
 </header>
 
@@ -753,7 +752,7 @@ grid on;</code></pre>
       MATLAB has become the industry-standard software for control system analysis and design. Its powerful toolboxes and graphical capabilities allow engineers and students to model, analyze, simulate, and optimize dynamic systems efficiently before real-world implementation.
     </p>
 
-    <a href="#" class="button reveal">
+    <a href="../index.html#home" class="button reveal">
       ← Back to Home
     </a>
 
@@ -761,7 +760,7 @@ grid on;</code></pre>
 </div>
 
 <footer>
-  <p>© 2026 <a href="#">EE Learning Blog</a> | Developed by Ram Kumar</p>
+  <p>© 2026 <a href="../index.html#home">EE Learning Blog</a> | Developed by Ram Kumar</p>
 </footer>
 
 <a href="#" class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
@@ -798,8 +797,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
 // Nav active state
 document.querySelectorAll('nav a').forEach(link => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
+  link.addEventListener('click', () => {
     document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
     link.classList.add('active');
   });
