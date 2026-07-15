@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Complaint Portal</title>
+  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <strong>Admin Dashboard</strong>
+    <nav class="nav-links">
+      <a href="/home/runner/work/blog/blog/index.html">Home</a>
+      <a class="active" href="/home/runner/work/blog/blog/admin-dashboard.html">Dashboard</a>
+      <a href="/home/runner/work/blog/blog/faq.html">FAQ</a>
+      <button id="backupBtn">Export Backup</button>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container grid" style="gap: 16px;">
+    <section class="grid cards" id="kpis"></section>
+
+    <section class="card">
+      <h3>Complaint Queue</h3>
+      <div class="form-grid">
+        <div>
+          <label for="searchInput">Search (ID / title / student)</label>
+          <input id="searchInput" placeholder="Type text">
+        </div>
+        <div>
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter"></select>
+        </div>
+        <div>
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter"></select>
+        </div>
+        <div>
+          <label for="sortFilter">Sort</label>
+          <select id="sortFilter">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="priority">Priority (High → Low)</option>
+            <option value="due">Due date</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="applyFilters">Apply</button>
+      </div>
+      <div class="table-wrap" style="margin-top: 12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Student</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Due</th>
+              <th>Escalated</th>
+            </tr>
+          </thead>
+          <tbody id="complaintRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Selected Complaint</h3>
+      <div id="updateMessage"></div>
+      <div id="detailPanel" class="small muted">Select a complaint from queue to assign/update.</div>
+      <form id="updateForm" class="grid" style="margin-top: 12px;">
+        <div class="form-grid">
+          <div>
+            <label for="assignedTo">Assign To (staff / team)</label>
+            <input id="assignedTo" maxlength="100">
+          </div>
+          <div>
+            <label for="newStatus">New Status</label>
+            <select id="newStatus"></select>
+          </div>
+        </div>
+        <div>
+          <label for="note">Update Note / Resolution Note</label>
+          <textarea id="note" minlength="3" maxlength="1000" required></textarea>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Save Update</button>
+        </div>
+      </form>
+      <h4>Timeline</h4>
+      <div id="timeline" class="timeline"></div>
+    </section>
+  </div>
+</main>
+
+<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script>
+const admin = portal.requireRole('admin');
+if (!admin) throw new Error('Unauthorized');
+
+document.getElementById('logoutBtn').addEventListener('click', portal.logout);
+document.getElementById('backupBtn').addEventListener('click', portal.exportBackup);
+
+portal.escalateOverdueComplaints(admin.name);
+
+const statusFilter = document.getElementById('statusFilter');
+statusFilter.add(new Option('All', 'All'));
+portal.STATUSES.forEach(s => statusFilter.add(new Option(s, s)));
+
+const categoryFilter = document.getElementById('categoryFilter');
+categoryFilter.add(new Option('All', 'All'));
+portal.CATEGORIES.forEach(c => categoryFilter.add(new Option(c, c)));
+
+const newStatus = document.getElementById('newStatus');
+portal.STATUSES.forEach(s => newStatus.add(new Option(s, s)));
+
+const rows = document.getElementById('complaintRows');
+const detailPanel = document.getElementById('detailPanel');
+const timeline = document.getElementById('timeline');
+const kpis = document.getElementById('kpis');
+const updateMessage = document.getElementById('updateMessage');
+let selectedComplaintId = null;
+
+function priorityWeight(p) {
+  return p === 'High' ? 3 : p === 'Medium' ? 2 : 1;
+}
+
+function renderKPIs() {
+  const a = portal.analytics();
+  kpis.innerHTML = `
+    <article class="card"><div class="kpi">${a.total}</div><div class="small muted">Total Complaints</div></article>
+    <article class="card"><div class="kpi">${a.open}</div><div class="small muted">Open Complaints</div></article>
+    <article class="card"><div class="kpi">${a.resolved}</div><div class="small muted">Resolved</div></article>
+    <article class="card"><div class="kpi">${a.escalated}</div><div class="small muted">Escalated</div></article>
+    <article class="card" style="grid-column: span 2;"><strong>Category-wise:</strong> ${Object.entries(a.byCategory).map(([k,v]) => `${k}: ${v}`).join(' | ')}</article>
+  `;
+}
+
+function filteredList() {
+  const search = portal.sanitize(document.getElementById('searchInput').value).toLowerCase();
+  const status = statusFilter.value;
+  const category = categoryFilter.value;
+  const sort = document.getElementById('sortFilter').value;
+
+  const list = portal.allComplaints().filter(c => {
+    if (status !== 'All' && c.status !== status) return false;
+    if (category !== 'All' && c.category !== category) return false;
+    if (search) {
+      const hay = `${c.id} ${c.title} ${c.created_by_name}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (sort === 'oldest') list.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  if (sort === 'priority') list.sort((a, b) => priorityWeight(b.priority) - priorityWeight(a.priority));
+  if (sort === 'due') list.sort((a, b) => a.due_at.localeCompare(b.due_at));
+  return list;
+}
+
+function renderQueue() {
+  const list = filteredList();
+  rows.innerHTML = list.length ? list.map(c => `
+    <tr class="clickable" data-id="${c.id}">
+      <td>${c.id}</td>
+      <td>${c.title}</td>
+      <td>${c.created_by_name}</td>
+      <td>${c.category}</td>
+      <td><span class="badge priority-${c.priority}">${c.priority}</span></td>
+      <td><span class="badge status-${portal.normalizeStatusClass(c.status)}">${c.status}</span></td>
+      <td>${c.assigned_to || '-'}</td>
+      <td>${portal.formatDate(c.due_at)}</td>
+      <td>${c.escalated ? 'Yes' : 'No'}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="9" class="small muted">No complaints found.</td></tr>';
+
+  rows.querySelectorAll('tr[data-id]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      selectedComplaintId = tr.getAttribute('data-id');
+      renderDetail();
+    });
+  });
+
+  if (selectedComplaintId && !list.some(c => c.id === selectedComplaintId)) {
+    selectedComplaintId = null;
+    detailPanel.textContent = 'Select a complaint from queue to assign/update.';
+    timeline.innerHTML = '';
+  }
+}
+
+function renderDetail() {
+  if (!selectedComplaintId) return;
+  const c = portal.complaintById(selectedComplaintId);
+  if (!c) return;
+
+  detailPanel.innerHTML = `
+    <p><strong>${c.title}</strong> (${c.id})</p>
+    <p class="small muted">Student: ${c.created_by_name} | Category: ${c.category} | Priority: ${c.priority}</p>
+    <p class="small muted">Status: ${c.status} | Assigned To: ${c.assigned_to || '-'} | Escalated: ${c.escalated ? 'Yes' : 'No'}</p>
+    <p class="small">${c.description}</p>
+    <p class="small muted">Created: ${portal.formatDate(c.created_at)} | Due: ${portal.formatDate(c.due_at)} | Last updated: ${portal.formatDate(c.updated_at)}</p>
+  `;
+
+  document.getElementById('assignedTo').value = c.assigned_to || '';
+  document.getElementById('newStatus').value = c.status;
+
+  const updates = portal.complaintUpdates(c.id);
+  timeline.innerHTML = updates.length ? updates.map(u => `
+    <div class="timeline-item">
+      <div><strong>${u.actor_name}</strong> • ${portal.formatDate(u.created_at)}</div>
+      <div class="small">${u.message}</div>
+      ${u.new_status ? `<div class="small muted">Status: ${u.new_status}</div>` : ''}
+    </div>
+  `).join('') : '<div class="small muted">No updates yet.</div>';
+}
+
+document.getElementById('applyFilters').addEventListener('click', renderQueue);
+
+document.getElementById('updateForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!selectedComplaintId) return portal.setMessage(updateMessage, 'error', 'Select a complaint first.');
+
+  const result = portal.updateComplaint({
+    complaintId: selectedComplaintId,
+    assignedTo: document.getElementById('assignedTo').value,
+    status: document.getElementById('newStatus').value,
+    note: document.getElementById('note').value
+  }, admin);
+
+  if (!result.ok) return portal.setMessage(updateMessage, 'error', result.error);
+  portal.setMessage(updateMessage, 'success', 'Complaint updated successfully.');
+  document.getElementById('note').value = '';
+  portal.escalateOverdueComplaints(admin.name);
+  renderKPIs();
+  renderQueue();
+  renderDetail();
+});
+
+renderKPIs();
+renderQueue();
+</script>
+</body>
+</html>

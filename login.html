@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Complaint Portal</title>
+  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <strong>College Complaint Portal</strong>
+    <nav class="nav-links">
+      <a href="/home/runner/work/blog/blog/index.html">Home</a>
+      <a href="/home/runner/work/blog/blog/register.html">Student Register</a>
+      <a class="active" href="/home/runner/work/blog/blog/login.html">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container grid" style="max-width: 600px;">
+    <section class="card">
+      <h2>Login</h2>
+      <p class="small muted">Students and admin both login here.</p>
+      <div id="message"></div>
+      <form id="loginForm" class="grid">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" required maxlength="120">
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" required maxlength="50">
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Login</button>
+          <a class="btn" href="/home/runner/work/blog/blog/register.html">Create Student Account</a>
+        </div>
+      </form>
+      <p class="small muted">Demo admin: admin@college.edu / Admin@123</p>
+    </section>
+  </div>
+</main>
+
+<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script>
+const form = document.getElementById('loginForm');
+const message = document.getElementById('message');
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const result = portal.login({
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value
+  });
+  if (!result.ok) return portal.setMessage(message, 'error', result.error);
+  const target = result.role === 'admin'
+    ? '/home/runner/work/blog/blog/admin-dashboard.html'
+    : '/home/runner/work/blog/blog/student-dashboard.html';
+  window.location.href = target;
+});
+</script>
+</body>
+</html>

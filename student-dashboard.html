@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - Complaint Portal</title>
+  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <strong>Student Dashboard</strong>
+    <nav class="nav-links">
+      <a href="/home/runner/work/blog/blog/index.html">Home</a>
+      <a class="active" href="/home/runner/work/blog/blog/student-dashboard.html">Dashboard</a>
+      <a href="/home/runner/work/blog/blog/faq.html">FAQ</a>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container grid" style="gap: 16px;">
+    <section class="card">
+      <h2 id="welcome"></h2>
+      <p class="small muted">Submit a complaint and track updates in real time. Attachment types allowed: PNG/JPG/WEBP/PDF (max 2MB).</p>
+    </section>
+
+    <section class="card">
+      <h3>Submit Complaint</h3>
+      <div id="formMessage"></div>
+      <form id="complaintForm" class="grid">
+        <div class="form-grid">
+          <div>
+            <label for="title">Title</label>
+            <input id="title" required maxlength="120" minlength="5">
+          </div>
+          <div>
+            <label for="category">Category</label>
+            <select id="category" required></select>
+          </div>
+          <div>
+            <label for="priority">Priority</label>
+            <select id="priority" required></select>
+          </div>
+          <div>
+            <label for="expectedDays">Expected Resolution (days)</label>
+            <input id="expectedDays" type="number" min="1" max="30" placeholder="Optional">
+          </div>
+        </div>
+        <div>
+          <label for="description">Description</label>
+          <textarea id="description" required minlength="10" maxlength="2000"></textarea>
+        </div>
+        <div>
+          <label for="attachment">Attachment (optional)</label>
+          <input id="attachment" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf">
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Submit Complaint</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>My Complaints</h3>
+      <div class="form-grid">
+        <div>
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter"></select>
+        </div>
+        <div>
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter"></select>
+        </div>
+        <div>
+          <label for="fromDate">From Date</label>
+          <input id="fromDate" type="date">
+        </div>
+        <div>
+          <label for="toDate">To Date</label>
+          <input id="toDate" type="date">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="applyFilters">Apply Filters</button>
+        <button id="clearFilters">Clear Filters</button>
+      </div>
+      <div class="table-wrap" style="margin-top: 12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Due</th>
+              <th>Escalated</th>
+            </tr>
+          </thead>
+          <tbody id="complaintRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Complaint Detail & Timeline</h3>
+      <div id="detailPanel" class="muted small">Select any complaint row to view complete timeline and updates.</div>
+      <div id="timeline" class="timeline" style="margin-top: 12px;"></div>
+    </section>
+
+    <section class="card">
+      <h3>Notifications</h3>
+      <div id="notifications" class="timeline"></div>
+    </section>
+  </div>
+</main>
+
+<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script>
+const user = portal.requireRole('student');
+if (!user) throw new Error('Unauthorized');
+document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
+document.getElementById('logoutBtn').addEventListener('click', portal.logout);
+
+portal.escalateOverdueComplaints('System');
+
+const categoryEl = document.getElementById('category');
+const priorityEl = document.getElementById('priority');
+portal.CATEGORIES.forEach(c => categoryEl.add(new Option(c, c)));
+portal.PRIORITIES.forEach(p => priorityEl.add(new Option(p, p)));
+
+const statusFilter = document.getElementById('statusFilter');
+statusFilter.add(new Option('All', 'All'));
+portal.STATUSES.forEach(s => statusFilter.add(new Option(s, s)));
+
+const categoryFilter = document.getElementById('categoryFilter');
+categoryFilter.add(new Option('All', 'All'));
+portal.CATEGORIES.forEach(c => categoryFilter.add(new Option(c, c)));
+
+const rows = document.getElementById('complaintRows');
+const detailPanel = document.getElementById('detailPanel');
+const timeline = document.getElementById('timeline');
+const formMessage = document.getElementById('formMessage');
+let selectedComplaintId = null;
+
+function renderTable() {
+  const fromDate = document.getElementById('fromDate').value;
+  const toDate = document.getElementById('toDate').value;
+  const status = statusFilter.value;
+  const category = categoryFilter.value;
+
+  const list = portal.complaintsForUser(user.id).filter(c => {
+    if (status !== 'All' && c.status !== status) return false;
+    if (category !== 'All' && c.category !== category) return false;
+    const created = new Date(c.created_at).toISOString().slice(0, 10);
+    if (fromDate && created < fromDate) return false;
+    if (toDate && created > toDate) return false;
+    return true;
+  });
+
+  rows.innerHTML = list.length ? list.map(c => `
+    <tr class="clickable" data-id="${c.id}">
+      <td>${c.id}</td>
+      <td>${c.title}</td>
+      <td>${c.category}</td>
+      <td><span class="badge priority-${c.priority}">${c.priority}</span></td>
+      <td><span class="badge status-${portal.normalizeStatusClass(c.status)}">${c.status}</span></td>
+      <td>${c.assigned_to || '-'}</td>
+      <td>${portal.formatDate(c.due_at)}</td>
+      <td>${c.escalated ? 'Yes' : 'No'}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="8" class="muted">No complaints found.</td></tr>';
+
+  rows.querySelectorAll('tr[data-id]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      selectedComplaintId = tr.getAttribute('data-id');
+      renderDetail();
+    });
+  });
+
+  if (selectedComplaintId && !list.some(c => c.id === selectedComplaintId)) {
+    selectedComplaintId = null;
+    detailPanel.textContent = 'Select any complaint row to view complete timeline and updates.';
+    timeline.innerHTML = '';
+  }
+}
+
+function renderDetail() {
+  if (!selectedComplaintId) return;
+  const c = portal.complaintById(selectedComplaintId);
+  if (!c) return;
+  detailPanel.innerHTML = `
+    <p><strong>${c.title}</strong> (${c.id})</p>
+    <p class="small muted">Category: ${c.category} | Priority: ${c.priority} | Status: ${c.status}</p>
+    <p class="small">${c.description}</p>
+    <p class="small muted">Created: ${portal.formatDate(c.created_at)} | Updated: ${portal.formatDate(c.updated_at)}</p>
+    <p class="small muted">Expected resolution: ${portal.formatDate(c.due_at)} ${c.escalated ? ' | <strong>Escalated</strong>' : ''}</p>
+    <p class="small muted">Attachment: ${c.attachment ? `${c.attachment.name} (${Math.ceil(c.attachment.size/1024)} KB)` : 'None'}</p>
+  `;
+
+  const updates = portal.complaintUpdates(c.id);
+  timeline.innerHTML = updates.length ? updates.map(u => `
+    <div class="timeline-item">
+      <div><strong>${u.actor_name}</strong> • ${portal.formatDate(u.created_at)}</div>
+      <div class="small">${u.message}</div>
+      ${u.new_status ? `<div class="small muted">Status: ${u.new_status}</div>` : ''}
+    </div>
+  `).join('') : '<div class="small muted">No updates available.</div>';
+}
+
+function renderNotifications() {
+  const el = document.getElementById('notifications');
+  const items = portal.userNotifications(user.id).slice(0, 10);
+  el.innerHTML = items.length ? items.map(n => `
+    <div class="timeline-item">
+      <div>${n.message}</div>
+      <div class="small muted">${portal.formatDate(n.created_at)}</div>
+    </div>
+  `).join('') : '<div class="small muted">No notifications yet.</div>';
+  portal.markNotificationsRead(user.id);
+}
+
+const complaintForm = document.getElementById('complaintForm');
+complaintForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const file = document.getElementById('attachment').files[0] || null;
+  const result = portal.submitComplaint({
+    title: document.getElementById('title').value,
+    category: document.getElementById('category').value,
+    priority: document.getElementById('priority').value,
+    description: document.getElementById('description').value,
+    expectedDays: document.getElementById('expectedDays').value,
+    attachment: file
+  }, user);
+
+  if (!result.ok) return portal.setMessage(formMessage, 'error', result.error);
+  portal.setMessage(formMessage, 'success', `Complaint ${result.complaint.id} submitted successfully.`);
+  complaintForm.reset();
+  renderTable();
+  renderNotifications();
+});
+
+document.getElementById('applyFilters').addEventListener('click', renderTable);
+document.getElementById('clearFilters').addEventListener('click', () => {
+  statusFilter.value = 'All';
+  categoryFilter.value = 'All';
+  document.getElementById('fromDate').value = '';
+  document.getElementById('toDate').value = '';
+  renderTable();
+});
+
+renderTable();
+renderNotifications();
+</script>
+</body>
+</html>

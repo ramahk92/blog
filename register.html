@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration - Complaint Portal</title>
+  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <strong>College Complaint Portal</strong>
+    <nav class="nav-links">
+      <a href="/home/runner/work/blog/blog/index.html">Home</a>
+      <a class="active" href="/home/runner/work/blog/blog/register.html">Student Register</a>
+      <a href="/home/runner/work/blog/blog/login.html">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container grid" style="max-width: 700px;">
+    <section class="card">
+      <h2>Create Student Account</h2>
+      <div id="message"></div>
+      <form id="registerForm" class="grid">
+        <div>
+          <label for="name">Full Name</label>
+          <input id="name" required maxlength="80">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" required maxlength="120">
+        </div>
+        <div>
+          <label for="department">Department / Year</label>
+          <input id="department" required maxlength="80">
+        </div>
+        <div class="form-grid">
+          <div>
+            <label for="password">Password</label>
+            <input id="password" type="password" required minlength="8" maxlength="50">
+          </div>
+          <div>
+            <label for="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" type="password" required minlength="8" maxlength="50">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Register</button>
+          <a class="btn" href="/home/runner/work/blog/blog/login.html">Go to Login</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script>
+const form = document.getElementById('registerForm');
+const message = document.getElementById('message');
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const result = portal.registerStudent({
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    department: document.getElementById('department').value,
+    password: document.getElementById('password').value,
+    confirmPassword: document.getElementById('confirmPassword').value
+  });
+  if (!result.ok) return portal.setMessage(message, 'error', result.error);
+  portal.setMessage(message, 'success', 'Registration successful. Redirecting to login...');
+  form.reset();
+  setTimeout(() => { window.location.href = '/home/runner/work/blog/blog/login.html'; }, 800);
+});
+</script>
+</body>
+</html>
