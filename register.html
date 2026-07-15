@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Registration - Complaint Portal</title>
-  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+  <link rel="stylesheet" href="/portal.css">
 </head>
 <body>
 <header>
   <div class="container nav">
     <strong>College Complaint Portal</strong>
     <nav class="nav-links">
-      <a href="/home/runner/work/blog/blog/index.html">Home</a>
-      <a class="active" href="/home/runner/work/blog/blog/register.html">Student Register</a>
-      <a href="/home/runner/work/blog/blog/login.html">Login</a>
+      <a href="/index.html">Home</a>
+      <a class="active" href="/register.html">Student Register</a>
+      <a href="/login.html">Login</a>
     </nav>
   </div>
 </header>
@@ -48,14 +48,14 @@
         </div>
         <div class="actions">
           <button class="primary" type="submit">Register</button>
-          <a class="btn" href="/home/runner/work/blog/blog/login.html">Go to Login</a>
+          <a class="btn" href="/login.html">Go to Login</a>
         </div>
       </form>
     </section>
   </div>
 </main>
 
-<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script src="/portal.js"></script>
 <script>
 const form = document.getElementById('registerForm');
 const message = document.getElementById('message');
@@ -71,7 +71,7 @@ form.addEventListener('submit', (e) => {
   if (!result.ok) return portal.setMessage(message, 'error', result.error);
   portal.setMessage(message, 'success', 'Registration successful. Redirecting to login...');
   form.reset();
-  setTimeout(() => { window.location.href = '/home/runner/work/blog/blog/login.html'; }, 800);
+  setTimeout(() => { window.location.href = '/login.html'; }, 800);
 });
 </script>
 </body>

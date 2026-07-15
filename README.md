@@ -8,12 +8,12 @@ This repository now hosts a front-end complaint portal for college facilities.
 - Categories: **Library, Lab, Hostel, Wi-Fi, Other**.
 
 ## Core pages
-- `/home/runner/work/blog/blog/index.html` - Home page
-- `/home/runner/work/blog/blog/register.html` - Student registration
-- `/home/runner/work/blog/blog/login.html` - Login
-- `/home/runner/work/blog/blog/student-dashboard.html` - Student dashboard
-- `/home/runner/work/blog/blog/admin-dashboard.html` - Admin dashboard
-- `/home/runner/work/blog/blog/faq.html` - FAQ/help
+- `index.html` - Home page
+- `register.html` - Student registration
+- `login.html` - Login
+- `student-dashboard.html` - Student dashboard
+- `admin-dashboard.html` - Admin dashboard
+- `faq.html` - FAQ/help
 
 ## Data model (client-side localStorage)
 - `cp_users`: users with role/profile fields

@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Complaint Portal</title>
-  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+  <link rel="stylesheet" href="/portal.css">
 </head>
 <body>
 <header>
   <div class="container nav">
     <strong>College Complaint Portal</strong>
     <nav class="nav-links">
-      <a href="/home/runner/work/blog/blog/index.html">Home</a>
-      <a href="/home/runner/work/blog/blog/register.html">Student Register</a>
-      <a class="active" href="/home/runner/work/blog/blog/login.html">Login</a>
+      <a href="/index.html">Home</a>
+      <a href="/register.html">Student Register</a>
+      <a class="active" href="/login.html">Login</a>
     </nav>
   </div>
 </header>
@@ -35,7 +35,7 @@
         </div>
         <div class="actions">
           <button class="primary" type="submit">Login</button>
-          <a class="btn" href="/home/runner/work/blog/blog/register.html">Create Student Account</a>
+          <a class="btn" href="/register.html">Create Student Account</a>
         </div>
       </form>
       <p class="small muted">Demo admin: admin@college.edu / Admin@123</p>
@@ -43,7 +43,7 @@
   </div>
 </main>
 
-<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script src="/portal.js"></script>
 <script>
 const form = document.getElementById('loginForm');
 const message = document.getElementById('message');
@@ -55,8 +55,8 @@ form.addEventListener('submit', (e) => {
   });
   if (!result.ok) return portal.setMessage(message, 'error', result.error);
   const target = result.role === 'admin'
-    ? '/home/runner/work/blog/blog/admin-dashboard.html'
-    : '/home/runner/work/blog/blog/student-dashboard.html';
+    ? '/admin-dashboard.html'
+    : '/student-dashboard.html';
   window.location.href = target;
 });
 </script>

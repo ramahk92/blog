@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Dashboard - Complaint Portal</title>
-  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+  <link rel="stylesheet" href="/portal.css">
 </head>
 <body>
 <header>
   <div class="container nav">
     <strong>Student Dashboard</strong>
     <nav class="nav-links">
-      <a href="/home/runner/work/blog/blog/index.html">Home</a>
-      <a class="active" href="/home/runner/work/blog/blog/student-dashboard.html">Dashboard</a>
-      <a href="/home/runner/work/blog/blog/faq.html">FAQ</a>
+      <a href="/index.html">Home</a>
+      <a class="active" href="/student-dashboard.html">Dashboard</a>
+      <a href="/faq.html">FAQ</a>
       <button id="logoutBtn">Logout</button>
     </nav>
   </div>
@@ -118,7 +118,7 @@
   </div>
 </main>
 
-<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script src="/portal.js"></script>
 <script>
 const user = portal.requireRole('student');
 if (!user) throw new Error('Unauthorized');

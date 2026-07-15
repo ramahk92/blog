@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Complaint Portal</title>
-  <link rel="stylesheet" href="/home/runner/work/blog/blog/portal.css">
+  <link rel="stylesheet" href="/portal.css">
 </head>
 <body>
 <header>
   <div class="container nav">
     <strong>Admin Dashboard</strong>
     <nav class="nav-links">
-      <a href="/home/runner/work/blog/blog/index.html">Home</a>
-      <a class="active" href="/home/runner/work/blog/blog/admin-dashboard.html">Dashboard</a>
-      <a href="/home/runner/work/blog/blog/faq.html">FAQ</a>
+      <a href="/index.html">Home</a>
+      <a class="active" href="/admin-dashboard.html">Dashboard</a>
+      <a href="/faq.html">FAQ</a>
       <button id="backupBtn">Export Backup</button>
       <button id="logoutBtn">Logout</button>
     </nav>
@@ -101,7 +101,7 @@
   </div>
 </main>
 
-<script src="/home/runner/work/blog/blog/portal.js"></script>
+<script src="/portal.js"></script>
 <script>
 const admin = portal.requireRole('admin');
 if (!admin) throw new Error('Unauthorized');

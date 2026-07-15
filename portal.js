@@ -95,13 +95,13 @@
 
   function logout() {
     localStorage.removeItem(KEY.currentUser);
-    window.location.href = '/home/runner/work/blog/blog/login.html';
+    window.location.href = '/login.html';
   }
 
   function requireRole(role) {
     const user = currentUser();
     if (!user || (role && user.role !== role)) {
-      window.location.href = '/home/runner/work/blog/blog/login.html';
+      window.location.href = '/login.html';
       return null;
     }
     return user;
