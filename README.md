@@ -2,6 +2,8 @@
 
 This repository now hosts a front-end complaint portal for college facilities.
 
+> ⚠️ Demo-only warning: authentication data is stored in browser localStorage for demonstration purposes. Do not use this implementation as-is in production.
+
 ## Scope and roles
 - **Student**: register/login, submit complaint, track status and updates.
 - **Admin/Staff**: view queue, assign complaint, update status, close/reject complaints.

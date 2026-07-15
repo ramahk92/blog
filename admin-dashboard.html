@@ -104,7 +104,10 @@
 <script src="/portal.js"></script>
 <script>
 const admin = portal.requireRole('admin');
-if (!admin) throw new Error('Admin authentication failed - role check did not pass');
+if (!admin) {
+  window.location.href = '/login.html';
+}
+if (admin) {
 
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 document.getElementById('backupBtn').addEventListener('click', portal.exportBackup);
@@ -246,6 +249,7 @@ document.getElementById('updateForm').addEventListener('submit', (e) => {
 
 renderKPIs();
 renderQueue();
+}
 </script>
 </body>
 </html>

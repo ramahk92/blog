@@ -154,13 +154,9 @@
     const key = `cp_rate_${userId}`;
     const now = Date.now();
     const events = read(key, []).filter(ts => now - ts < SUBMIT_WINDOW_MS);
-    if (events.length >= SUBMIT_LIMIT) {
-      write(key, events);
-      return true;
-    }
     events.push(now);
     write(key, events);
-    return false;
+    return events.length > SUBMIT_LIMIT;
   }
 
   function dueDateForPriority(priority, expectedDaysInput) {

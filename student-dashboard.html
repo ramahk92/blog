@@ -121,7 +121,10 @@
 <script src="/portal.js"></script>
 <script>
 const user = portal.requireRole('student');
-if (!user) throw new Error('User authentication failed - role check did not pass');
+if (!user) {
+  window.location.href = '/login.html';
+}
+if (user) {
 document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 
@@ -254,6 +257,7 @@ document.getElementById('clearFilters').addEventListener('click', () => {
 
 renderTable();
 renderNotifications();
+}
 </script>
 </body>
 </html>
