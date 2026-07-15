@@ -123,8 +123,7 @@
 const user = portal.requireRole('student');
 if (!user) {
   window.location.href = '/login.html';
-}
-if (user) {
+} else {
 const SYSTEM_ACTOR = 'System';
 document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);

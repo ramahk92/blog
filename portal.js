@@ -17,12 +17,19 @@
   const MAX_FILE_SIZE = 2 * 1024 * 1024;
   const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
   const SUBMIT_LIMIT = 3;
-  const ADMIN_PASSWORD_HASH = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7';
+  const ADMIN_PASSWORD_SALT = 'admin-demo-salt-v1';
+  const ADMIN_PASSWORD_HASH = '8fd74521894304388f66abee7e765514ce828b4afc6662e9763e29e8492c1383';
 
   function nowISO() { return new Date().toISOString(); }
   function generateId(prefix) { return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
-  async function hashPassword(password) {
-    const data = new TextEncoder().encode(String(password));
+  function generateSalt() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function hashPassword(password, salt) {
+    const data = new TextEncoder().encode(`${String(salt)}:${String(password)}`);
     const digest = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
@@ -80,6 +87,7 @@
         id: 'admin-1',
         name: 'Portal Admin',
         email: 'admin@college.edu',
+        password_salt: ADMIN_PASSWORD_SALT,
         password_hash: ADMIN_PASSWORD_HASH,
         role: 'admin',
         department: 'Administration',
@@ -88,6 +96,7 @@
     } else {
       users.forEach(u => {
         if (u.email === 'admin@college.edu' && u.password === 'Admin@123' && !u.password_hash) {
+          u.password_salt = ADMIN_PASSWORD_SALT;
           u.password_hash = ADMIN_PASSWORD_HASH;
           delete u.password;
         }
@@ -143,9 +152,10 @@
       email: cleanEmail,
       department: cleanDepartment,
       role: 'student',
-      password_hash: await hashPassword(password),
+      password_salt: generateSalt(),
       created_at: nowISO()
     };
+    user.password_hash = await hashPassword(password, user.password_salt);
     users.push(user);
     write(KEY.users, users);
     return { ok: true };
@@ -156,14 +166,12 @@
     const users = read(KEY.users, []);
     const found = users.find(u => u.email === cleanEmail);
     if (!found) return { ok: false, error: 'Invalid credentials.' };
-    const hashed = await hashPassword(password);
-    const matched = found.password_hash ? found.password_hash === hashed : found.password === password;
-    if (!matched) return { ok: false, error: 'Invalid credentials.' };
-    if (!found.password_hash) {
-      found.password_hash = hashed;
-      delete found.password;
-      write(KEY.users, users);
+    if (!found.password_hash || !found.password_salt) {
+      return { ok: false, error: 'Account security format is outdated. Please register again.' };
     }
+    const hashed = await hashPassword(password, found.password_salt);
+    const matched = found.password_hash === hashed;
+    if (!matched) return { ok: false, error: 'Invalid credentials.' };
     setCurrentUser({ id: found.id, name: found.name, email: found.email, role: found.role, department: found.department });
     return { ok: true, role: found.role };
   }
@@ -283,7 +291,9 @@
   }
 
   function complaintUpdates(complaintId) {
-    return read(KEY.updates, []).filter(u => u.complaint_id === complaintId).sort((a, b) => a.created_at.localeCompare(b.created_at));
+    return read(KEY.updates, [])
+      .filter(update => update.complaint_id === complaintId)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
   }
 
   function escalateOverdueComplaints(actorName) {

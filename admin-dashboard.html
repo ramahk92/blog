@@ -106,8 +106,7 @@
 const admin = portal.requireRole('admin');
 if (!admin) {
   window.location.href = '/login.html';
-}
-if (admin) {
+} else {
 
 document.getElementById('logoutBtn').addEventListener('click', portal.logout);
 document.getElementById('backupBtn').addEventListener('click', portal.exportBackup);
