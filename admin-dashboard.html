@@ -138,12 +138,15 @@ function priorityWeight(p) {
 
 function renderKPIs() {
   const a = portal.analytics();
+  const categorySummary = Object.entries(a.byCategory)
+    .map(([category, count]) => `${category}: ${count}`)
+    .join(' | ');
   kpis.innerHTML = `
     <article class="card"><div class="kpi">${a.total}</div><div class="small muted">Total Complaints</div></article>
     <article class="card"><div class="kpi">${a.open}</div><div class="small muted">Open Complaints</div></article>
     <article class="card"><div class="kpi">${a.resolved}</div><div class="small muted">Resolved</div></article>
     <article class="card"><div class="kpi">${a.escalated}</div><div class="small muted">Escalated</div></article>
-    <article class="card" style="grid-column: span 2;"><strong>Category-wise:</strong> ${Object.entries(a.byCategory).map(([k,v]) => `${k}: ${v}`).join(' | ')}</article>
+    <article class="card" style="grid-column: span 2;"><strong>Category-wise:</strong> ${categorySummary}</article>
   `;
 }
 

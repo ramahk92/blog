@@ -13,7 +13,7 @@
   const OPEN_STATUSES = new Set(['Submitted', 'In Review', 'In Progress']);
   const ALLOWED_FILE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'application/pdf']);
   const PRIORITY_DUE_DAYS = { High: 2, Medium: 4, Low: 7 };
-  // Rate limit: max 3 complaints per 10-minute window per student.
+  // Rate limit: maximum 3 complaints per 10-minute window per student.
   const MAX_FILE_SIZE = 2 * 1024 * 1024;
   const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
   const SUBMIT_LIMIT = 3;
@@ -311,6 +311,7 @@
     if (!STATUSES.includes(cleanStatus)) return { ok: false, error: 'Invalid status.' };
     if (!cleanNote || cleanNote.length < 3) return { ok: false, error: 'Update note must be at least 3 characters.' };
 
+    const previousAssignedTo = complaint.assigned_to;
     if (cleanAssignedTo) complaint.assigned_to = cleanAssignedTo;
     const previousStatus = complaint.status;
     complaint.status = cleanStatus;
@@ -327,9 +328,13 @@
       newStatus: cleanStatus
     });
 
-    let notify = `Complaint ${complaint.id} updated to ${cleanStatus}.`;
-    if (cleanAssignedTo) notify += ` Assigned to ${cleanAssignedTo}.`;
-    if (previousStatus !== cleanStatus || cleanAssignedTo) {
+    const statusChanged = previousStatus !== cleanStatus;
+    const assignmentChanged = Boolean(cleanAssignedTo && cleanAssignedTo !== previousAssignedTo);
+    const changes = [];
+    if (statusChanged) changes.push(`status changed to ${cleanStatus}`);
+    if (assignmentChanged) changes.push(`assigned to ${cleanAssignedTo}`);
+    if (changes.length) {
+      const notify = `Complaint ${complaint.id} updated: ${changes.join(' and ')}.`;
       addNotification({ userId: complaint.created_by, complaintId, message: notify });
     }
 
